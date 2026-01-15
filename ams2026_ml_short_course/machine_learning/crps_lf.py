@@ -237,7 +237,7 @@ def setup_cnn(
     model_object.compile(
         loss=custom_losses.CRPS(function_name='crps_loss'),
         optimizer=keras.optimizers.AdamW(),
-        metrics=custom_metrics.MeanSquaredError(function_name='mse')
+        metrics=[custom_metrics.MeanSquaredError(function_name='mse')]
     )
 
     model_object.summary()
