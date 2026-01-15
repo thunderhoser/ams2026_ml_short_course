@@ -130,6 +130,9 @@ def create_data(image_file_names, normalization_dict):
         predictor_names=image_dict[image_utils.PREDICTOR_NAMES_KEY],
         normalization_dict=normalization_dict
     )
+    print('Mean predictor values = {0:s}'.format(
+        str(numpy.mean(predictor_matrix, axis=(0, 1, 2)))
+    ))
 
     target_values = numpy.max(
         image_dict[image_utils.TARGET_MATRIX_KEY],
