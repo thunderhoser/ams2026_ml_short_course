@@ -67,13 +67,9 @@ class MeanSquaredError(keras.losses.Loss):
         """
 
         target_tensor = keras.ops.cast(target_tensor, prediction_tensor.dtype)
-        target_tensor_2d = keras.ops.expand_dims(target_tensor, axis=-1)
-
-        squared_error_tensor_2d = (prediction_tensor - target_tensor_2d) ** 2
-        squared_error_tensor_1d = keras.ops.mean(
-            squared_error_tensor_2d, axis=-1
-        )
-        return keras.ops.mean(squared_error_tensor_1d)
+        prediction_tensor = keras.ops.mean(prediction_tensor, axis=-1)
+        squared_error_tensor = (prediction_tensor - target_tensor) ** 2
+        return keras.ops.mean(squared_error_tensor)
 
 
 class CombinedLoss(keras.losses.Loss):
