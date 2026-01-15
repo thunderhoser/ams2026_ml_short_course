@@ -89,6 +89,7 @@ def _get_2d_pooling_layer(
 
 
 def setup_cnn(
+        loss_function,
         input_dimensions=DEFAULT_INPUT_DIMENSIONS,
         conv_block_layer_counts=DEFAULT_CONV_BLOCK_LAYER_COUNTS,
         conv_layer_channel_counts=DEFAULT_CONV_CHANNEL_COUNTS,
@@ -110,6 +111,7 @@ def setup_cnn(
     C = number of convolutional layers
     D = number of dense layers
 
+    :param loss_function: Loss function.
     :param input_dimensions: numpy array with dimensions of input data.  Entries
         should be (num_grid_rows, num_grid_columns, num_channels).
     :param conv_block_layer_counts: length-B numpy array with number of
@@ -235,7 +237,7 @@ def setup_cnn(
     )
 
     model_object.compile(
-        loss=custom_losses.CRPS(function_name='crps_loss'),
+        loss=loss_function,
         optimizer=keras.optimizers.AdamW(),
         metrics=[custom_metrics.MeanSquaredError(function_name='mse')]
     )
