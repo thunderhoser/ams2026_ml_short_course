@@ -4,6 +4,8 @@ import copy
 import numpy
 import keras
 from ams2026_ml_short_course.utils import utils
+from ams2026_ml_short_course.machine_learning import custom_losses
+from ams2026_ml_short_course.machine_learning import custom_metrics
 
 KERNEL_INITIALIZER_NAME = 'glorot_uniform'
 BIAS_INITIALIZER_NAME = 'zeros'
@@ -19,7 +21,7 @@ DEFAULT_DENSE_NEURON_COUNTS = numpy.array([776, 147, 100, 100, 100], dtype=int)
 DEFAULT_DENSE_DROPOUT_RATES = numpy.array([0.5, 0.5, 0.5, 0.5, 0])
 DEFAULT_INNER_ACTIV_FUNCTION_NAME = copy.deepcopy(utils.RELU_FUNCTION_NAME)
 DEFAULT_INNER_ACTIV_FUNCTION_ALPHA = 0.2
-DEFAULT_OUTPUT_ACTIV_FUNCTION_NAME = copy.deepcopy(utils.SIGMOID_FUNCTION_NAME)
+DEFAULT_OUTPUT_ACTIV_FUNCTION_NAME = copy.deepcopy(utils.RELU_FUNCTION_NAME)
 DEFAULT_OUTPUT_ACTIV_FUNCTION_ALPHA = 0.
 DEFAULT_L1_WEIGHT = 0.
 DEFAULT_L2_WEIGHT = 0.001
@@ -233,9 +235,9 @@ def setup_cnn(
     )
 
     model_object.compile(
-        loss=keras.losses.binary_crossentropy,
+        loss=custom_losses.CRPS(function_name='crps_loss'),
         optimizer=keras.optimizers.AdamW(),
-        metrics=['mse']
+        metrics=custom_metrics.MeanSquaredError(function_name='mse')
     )
 
     model_object.summary()
