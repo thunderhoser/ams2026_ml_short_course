@@ -327,3 +327,63 @@ def train_model_sans_generator(
         validation_data=(validation_predictor_matrix, validation_target_values),
         validation_steps=None
     )
+
+
+def apply_model(model_object, predictor_matrix, verbose=True):
+    """Applies trained CNN to new data.
+
+    E = number of examples (storm objects)
+    M = number of rows in each storm-centered grid
+    N = number of columns in each storm-centered grid
+    C = number of channels (predictor variables)
+
+    S = number of predictions per data examples
+
+    :param model_object: Trained model (instance of `keras.models.Model` or
+        `keras.models.Sequential`).
+    :param predictor_matrix: E-by-M-by-N-by-C numpy array of predictor values.
+    :param verbose: Boolean flag.  If True, will print progress messages.
+    :return: prediction_matrix: E-by-S numpy array of predictions.
+    """
+
+    num_examples = predictor_matrix.shape[0]
+    num_examples_per_batch = 1000
+    prediction_matrix = None
+
+    for i in range(0, num_examples, num_examples_per_batch):
+        first_index = i
+        last_index = min([i + num_examples_per_batch, num_examples])
+
+        if verbose:
+            print('Applying model to examples {0:d}-{1:d} of {2:d}...'.format(
+                first_index + 1, last_index, num_examples
+            ))
+
+        this_prediction_matrix = model_object.predict(
+            predictor_matrix[first_index:last_index, ...],
+            batch_size=last_index - first_index
+        )
+
+        if prediction_matrix is None:
+            these_dim = (num_examples,) + this_prediction_matrix.shape[1:]
+            prediction_matrix = numpy.full(these_dim, numpy.nan)
+
+        prediction_matrix[first_index:last_index, ...] = this_prediction_matrix
+
+    if verbose:
+        print('Have applied model to all {0:d} examples!'.format(num_examples))
+
+    return prediction_matrix
+
+
+def read_model_weights(model_object, hdf5_file_name):
+    """Reads model weights from HDF5 file.
+
+    :param model_object: Instance of `keras.models.Model` or
+        `keras.models.Sequential`, needed to specify the architecture.
+    :param hdf5_file_name: Path to HDF5 file with trained weights.
+    :return: model_object: Same as input but with different weights.
+    """
+
+    model_object.load_weights(hdf5_file_name)
+    return model_object
