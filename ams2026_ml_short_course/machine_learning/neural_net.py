@@ -230,7 +230,7 @@ def train_model_with_generator(
     )
 
     model_object.fit(
-        generator=training_generator,
+        x=training_generator,
         steps_per_epoch=num_training_batches_per_epoch,
         epochs=num_epochs,
         initial_epoch=initial_epoch,
@@ -238,4 +238,92 @@ def train_model_with_generator(
         callbacks=list_of_callback_objects,
         validation_data=validation_generator,
         validation_steps=num_validation_batches_per_epoch
+    )
+
+
+def train_model_sans_generator(
+        model_object, training_file_names, validation_file_names,
+        normalization_dict,
+        num_epochs, num_examples_per_batch,
+        save_weights_every_epoch,
+        output_dir_name):
+    """Trains CNN without generator.
+
+    :param model_object: See documentation for `train_model_with_generator`.
+    :param training_file_names: Same.
+    :param validation_file_names: Same.
+    :param normalization_dict: Same.
+    :param num_epochs: Same.
+    :param num_examples_per_batch: Same.
+    :param save_weights_every_epoch: Same.
+    :param output_dir_name: Same.
+    """
+
+    utils._mkdir_recursive_if_necessary(directory_name=output_dir_name)
+
+    backup_dir_name = '{0:s}/backup_and_restore'.format(output_dir_name)
+    utils._mkdir_recursive_if_necessary(directory_name=backup_dir_name)
+
+    if save_weights_every_epoch:
+        model_file_name = (
+            '{0:s}/model_epoch={{epoch:04d}}_val-loss={{val_loss:.5f}}.'
+            'weights.h5'
+        ).format(output_dir_name)
+    else:
+        model_file_name = '{0:s}/model.weights.h5'.format(output_dir_name)
+
+    history_file_name = '{0:s}/history.csv'.format(output_dir_name)
+
+    try:
+        history_table_pandas = pandas.read_csv(history_file_name)
+        initial_epoch = history_table_pandas['epoch'].max() + 1
+        best_validation_loss = history_table_pandas['val_loss'].min()
+    except:
+        initial_epoch = 0
+        best_validation_loss = numpy.inf
+
+    history_object = keras.callbacks.CSVLogger(
+        filename=history_file_name, separator=',', append=True
+    )
+    checkpoint_object = keras.callbacks.ModelCheckpoint(
+        filepath=model_file_name, monitor='val_loss', verbose=1,
+        save_best_only=not save_weights_every_epoch, save_weights_only=True,
+        mode='min', save_freq='epoch'
+    )
+    checkpoint_object.best = best_validation_loss
+
+    backup_object = keras.callbacks.BackupAndRestore(
+        backup_dir_name, save_freq='epoch', delete_checkpoint=False
+    )
+    plateau_object = keras.callbacks.ReduceLROnPlateau(
+        monitor='val_loss', factor=0.95,
+        patience=10, verbose=1, mode='min',
+        min_delta=0., cooldown=0
+    )
+
+    list_of_callback_objects = [
+        history_object, checkpoint_object, backup_object, plateau_object
+    ]
+
+    training_predictor_matrix, training_target_values = create_data(
+        image_file_names=training_file_names,
+        normalization_dict=normalization_dict
+    )
+    validation_predictor_matrix, validation_target_values = create_data(
+        image_file_names=validation_file_names,
+        normalization_dict=normalization_dict
+    )
+
+    model_object.fit(
+        x=training_predictor_matrix,
+        y=training_target_values,
+        batch_size=num_examples_per_batch,
+        steps_per_epoch=None,
+        epochs=num_epochs,
+        shuffle=True,
+        initial_epoch=initial_epoch,
+        verbose=1,
+        callbacks=list_of_callback_objects,
+        validation_data=(validation_predictor_matrix, validation_target_values),
+        validation_steps=None
     )
