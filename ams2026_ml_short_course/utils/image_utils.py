@@ -5,6 +5,7 @@ import glob
 import h5py
 import os.path
 import numpy
+import xarray
 import netCDF4
 from ams2026_ml_short_course.utils import utils
 
@@ -178,26 +179,19 @@ def read_file(netcdf_file_name):
     image_dict['target_matrix']: E-by-M-by-N numpy array of target values.
     """
 
-    try:
-        dataset_object = netCDF4.Dataset(netcdf_file_name)
-    except:
-        dataset_object = __rescue_netcdf3_file(netcdf_file_name)
-
-    storm_id_nums = numpy.array(
-        dataset_object.variables[STORM_ID_NAME_ORIG][:], dtype=int
-    )
-    storm_steps = numpy.array(
-        dataset_object.variables[STORM_STEP_NAME_ORIG][:], dtype=int
-    )
+    data_table_xarray = xarray.open_dataset(netcdf_file_name, engine='h5netcdf')
+    storm_id_nums = numpy.round(
+        data_table_xarray[STORM_ID_NAME_ORIG].values
+    ).astype(int)
+    storm_steps = numpy.round(
+        data_table_xarray[STORM_STEP_NAME_ORIG].values
+    ).astype(int)
 
     predictor_matrix = None
 
     for this_predictor_name in PREDICTOR_NAMES:
         this_key = PREDICTOR_NAME_TO_ORIG[this_predictor_name]
-
-        this_predictor_matrix = numpy.array(
-            dataset_object.variables[this_key][:], dtype=float
-        )
+        this_predictor_matrix = data_table_xarray[this_key].values
         this_predictor_matrix = numpy.expand_dims(
             this_predictor_matrix, axis=-1
         )
@@ -209,9 +203,7 @@ def read_file(netcdf_file_name):
                 (predictor_matrix, this_predictor_matrix), axis=-1
             )
 
-    target_matrix = numpy.array(
-        dataset_object.variables[TARGET_NAME_ORIG][:], dtype=float
-    )
+    target_matrix = data_table_xarray[TARGET_NAME_ORIG].values
 
     return {
         STORM_IDS_KEY: storm_id_nums,
