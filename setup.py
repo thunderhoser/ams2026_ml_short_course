@@ -4,7 +4,8 @@ from setuptools import setup
 
 PACKAGE_NAMES = [
     'ams2026_ml_short_course', 'ams2026_ml_short_course.utils',
-    'ams2026_ml_short_course.plotting'
+    'ams2026_ml_short_course.plotting',
+    'ams2026_ml_short_course.machine_learning'
 ]
 KEYWORDS = [
     'machine learning', 'deep learning', 'artificial intelligence',
