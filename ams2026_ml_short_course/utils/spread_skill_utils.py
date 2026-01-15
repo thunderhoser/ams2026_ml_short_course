@@ -20,8 +20,6 @@ MEAN_PREDICTION_COLOUR_STRING = 'purple'
 MEAN_TARGET_LINE_COLOUR = numpy.array([27, 158, 119], dtype=float) / 255
 MEAN_TARGET_COLOUR_STRING = 'green'
 
-INSET_FONT_SIZE = 20
-
 INSET_HISTO_FACE_COLOUR = numpy.full(3, 152. / 255)
 INSET_HISTO_EDGE_COLOUR = numpy.full(3, 0.)
 INSET_HISTO_EDGE_WIDTH = 1.
@@ -31,6 +29,16 @@ REFERENCE_LINE_WIDTH = 2.
 
 FIGURE_WIDTH_INCHES = 15
 FIGURE_HEIGHT_INCHES = 15
+
+INSET_FONT_SIZE = 14
+DEFAULT_FONT_SIZE = 24
+pyplot.rc('font', size=DEFAULT_FONT_SIZE)
+pyplot.rc('axes', titlesize=DEFAULT_FONT_SIZE)
+pyplot.rc('axes', labelsize=DEFAULT_FONT_SIZE)
+pyplot.rc('xtick', labelsize=DEFAULT_FONT_SIZE)
+pyplot.rc('ytick', labelsize=DEFAULT_FONT_SIZE)
+pyplot.rc('legend', fontsize=DEFAULT_FONT_SIZE)
+pyplot.rc('figure', titlesize=DEFAULT_FONT_SIZE)
 
 
 def _plot_means_as_inset(
@@ -268,11 +276,13 @@ def get_results_one_var(
 
 
 def plot_spread_vs_skill(
-        result_dict, line_colour=DEFAULT_LINE_COLOUR,
+        result_dict, model_description_string, line_colour=DEFAULT_LINE_COLOUR,
         line_style='solid', line_width=DEFAULT_LINE_WIDTH):
     """Displays the spread-skill plot.
 
     :param result_dict: Dictionary returned by `get_results_one_var`.
+    :param model_description_string: Model or dataset description (will go at
+        beginning of title).
     :param line_colour: Line colour (in any format accepted by matplotlib).
     :param line_style: Line style (in any format accepted by matplotlib).
     :param line_width: Line width (in any format accepted by matplotlib).
@@ -354,17 +364,17 @@ def plot_spread_vs_skill(
         figure_object=figure_object, bin_centers=mean_prediction_stdevs,
         bin_mean_predictions=mean_mean_predictions,
         bin_mean_target_values=mean_target_values,
-        plotting_corner_string='bottom_right',
+        plotting_corner_string='top_left',
         for_spread_skill_plot=True
     )
     inset_axes_object.set_zorder(axes_object.get_zorder() + 1)
 
     inset_axes_object.set_xticks(axes_object.get_xticks())
     inset_axes_object.set_xlim(axes_object.get_xlim())
-    inset_axes_object.set_xlabel(
-        'Spread ({0:s})'.format(unit_string),
-        fontsize=INSET_FONT_SIZE
-    )
+    # inset_axes_object.set_xlabel(
+    #     'Spread ({0:s})'.format(unit_string),
+    #     fontsize=INSET_FONT_SIZE
+    # )
     inset_axes_object.set_ylabel(
         'Avg target or pred ({0:s})'.format(unit_string),
         fontsize=INSET_FONT_SIZE
@@ -374,9 +384,11 @@ def plot_spread_vs_skill(
     )
 
     title_string = (
+        '{0:s}\n'
         'Spread vs. skill for max future vorticity\n'
-        'SSREL = {0:.6f} {1:s}; SSRAT = {2:.3f}'
+        'SSREL = {1:.6f} {2:s}; SSRAT = {3:.3f}'
     ).format(
+        model_description_string,
         spread_skill_reliability,
         unit_string,
         spread_skill_ratio
