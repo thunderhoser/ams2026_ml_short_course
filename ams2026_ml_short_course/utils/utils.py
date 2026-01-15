@@ -11,9 +11,7 @@ import pandas
 import matplotlib.colors
 from matplotlib import pyplot
 import keras
-import tensorflow.keras as tf_keras
-import tensorflow.keras.layers as layers
-import tensorflow.python.keras.backend as K
+import keras.layers as layers
 from scipy.interpolate import interp1d
 from scipy.ndimage.filters import gaussian_filter
 from scipy.spatial.distance import cdist
@@ -501,39 +499,6 @@ def _get_points_in_perf_diagram(observed_labels, forecast_probabilities):
     )
 
     return pod_by_threshold, success_ratio_by_threshold
-
-
-def _do_activation(input_values, function_name, slope_param=0.2):
-    """Runs input array through activation function.
-
-    :param input_values: numpy array (any shape).
-    :param function_name: Name of activation function.
-    :param slope_param: Slope parameter (alpha) for activation function.  Used
-        only for eLU and ReLU.
-    :return: output_values: Same as `input_values` but post-activation.
-    """
-
-    assert function_name in ACTIVATION_FUNCTION_NAMES
-
-    input_object = K.placeholder()
-
-    if function_name == ELU_FUNCTION_NAME:
-        function_object = K.function(
-            [input_object],
-            [layers.ELU(alpha=slope_param)(input_object)]
-        )
-    elif function_name == RELU_FUNCTION_NAME:
-        function_object = K.function(
-            [input_object],
-            [layers.LeakyReLU(alpha=slope_param)(input_object)]
-        )
-    else:
-        function_object = K.function(
-            [input_object],
-            [layers.Activation(function_name)(input_object)]
-        )
-
-    return function_object([input_values])[0]
 
 
 def _get_weight_regularizer(l1_weight, l2_weight):
@@ -1991,19 +1956,6 @@ def train_dense_net(
     )
 
 
-def read_dense_net(hdf5_file_name):
-    """Reads dense neural network from HDF5 file.
-
-    :param hdf5_file_name: Path to input file.
-    :return: model_object: Instance of `keras.models.Model` or
-        `keras.models.Sequential`.
-    """
-
-    return tf_keras.models.load_model(
-        hdf5_file_name, custom_objects=[]
-    )
-
-
 def apply_neural_net(
         model_object, predictor_matrix, num_examples_per_batch, verbose=True):
     """Applies trained neural network (dense or convolutional) to new data.
@@ -2627,76 +2579,6 @@ def run_backwards_test(
         STEP1_COSTS_KEY: step1_cost_matrix,
         BACKWARDS_FLAG_KEY: True
     }
-
-
-def _do_saliency_calculations(model_object, loss_tensor, input_matrices):
-    """Does saliency calculations.
-
-    T = number of input tensors to the model
-    E = number of examples
-
-    :param model_object: Instance of `keras.models.Model`.
-    :param loss_tensor: Keras tensor defining the loss function.
-    :param input_matrices: length-T list of numpy arrays, comprising one or more
-        examples.  input_matrices[i] must have the same dimensions as the [i]th
-        input tensor to the model.
-    :return: saliency_matrices: length-T list of numpy arrays, comprising the
-        saliency map for each example.  saliency_matrices[i] has the same
-        dimensions as input_matrices[i] and defines the "saliency" of each value
-        x, which is the gradient of the loss function with respect to x.
-    """
-
-    if isinstance(model_object.input, list):
-        input_tensors = model_object.input
-    else:
-        input_tensors = [model_object.input]
-
-    gradient_tensors = K.gradients(loss_tensor, input_tensors)
-    num_input_tensors = len(input_tensors)
-
-    for i in range(num_input_tensors):
-        gradient_tensors[i] /= K.maximum(
-            K.std(gradient_tensors[i]), K.epsilon()
-        )
-
-    inputs_to_gradients_function = K.function(
-        input_tensors + [K.learning_phase()], gradient_tensors
-    )
-
-    saliency_matrices = [None] * num_input_tensors
-    num_examples = input_matrices[0].shape[0]
-
-    for i in range(num_examples):
-        if numpy.mod(i, 100) == 0:
-            print((
-                'Have computed saliency maps for {0:d} of {1:d} examples...'
-            ).format(
-                i, num_examples
-            ))
-
-        these_input_matrices = [a[[i], ...] for a in input_matrices]
-        these_saliency_matrices = inputs_to_gradients_function(
-            these_input_matrices + [0]
-        )
-
-        if saliency_matrices[0] is None:
-            for j in range(num_input_tensors):
-                these_dim = (
-                    (num_examples,) + these_saliency_matrices[j].shape[1:]
-                )
-                saliency_matrices[j] = numpy.full(these_dim, numpy.nan)
-
-        for j in range(num_input_tensors):
-            saliency_matrices[j][i, ...] = these_saliency_matrices[j][0, ...]
-
-    print('Have computed saliency maps for all {0:d} examples!'.format(
-        num_examples
-    ))
-
-    for j in range(num_input_tensors):
-        saliency_matrices[j] *= -1
-
-    return saliency_matrices
 
 
 def get_saliency_one_neuron(
