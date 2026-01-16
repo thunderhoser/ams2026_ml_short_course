@@ -215,11 +215,7 @@ def setup_cnn(
         )(this_input_layer_object)
 
         if i == num_dense_layers - 1:
-            pass
-            # layer_object = utils._get_activation_layer(
-            #     function_name=output_activ_function_name,
-            #     slope_param=output_activ_function_alpha
-            # )(layer_object)
+            layer_object = keras.layers.Activation('softplus')(layer_object)
         else:
             layer_object = utils._get_activation_layer(
                 function_name=inner_activ_function_name,
