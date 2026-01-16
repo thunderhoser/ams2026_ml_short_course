@@ -3,6 +3,8 @@
 import keras
 import numpy
 
+GREEK_PI = numpy.pi
+
 
 class CRPS(keras.losses.Loss):
     def __init__(self, function_name, **kwargs):
@@ -152,12 +154,12 @@ class CRPSGaussian(keras.losses.Loss):
         )
         normal_pdf_tensor = (
             keras.ops.exp(-0.5 * standardized_error_tensor ** 2) /
-            keras.ops.sqrt(2. * keras.ops.pi)
+            keras.ops.sqrt(2. * GREEK_PI)
         )
 
         first_term_tensor = standardized_error_tensor * (2. * normal_cdf_tensor - 1.)
         second_term_tensor = 2. * normal_pdf_tensor
-        third_term_tensor = -1. / keras.ops.sqrt(keras.ops.pi)
+        third_term_tensor = -1. / keras.ops.sqrt(GREEK_PI)
 
         crps_tensor_1d = predicted_stdev_tensor * (
             first_term_tensor + second_term_tensor + third_term_tensor

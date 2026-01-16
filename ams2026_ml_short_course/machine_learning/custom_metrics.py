@@ -1,6 +1,9 @@
 """Custom metrics."""
 
+import numpy
 import keras
+
+GREEK_PI = numpy.pi
 
 
 class MeanSquaredError(keras.metrics.Metric):
@@ -291,12 +294,12 @@ class CRPSGaussian(keras.metrics.Metric):
         )
         normal_pdf_tensor = (
             keras.ops.exp(-0.5 * standardized_error_tensor ** 2) /
-            keras.ops.sqrt(2. * keras.ops.pi)
+            keras.ops.sqrt(2. * GREEK_PI)
         )
 
         first_term_tensor = standardized_error_tensor * (2. * normal_cdf_tensor - 1.)
         second_term_tensor = 2. * normal_pdf_tensor
-        third_term_tensor = -1. / keras.ops.sqrt(keras.ops.pi)
+        third_term_tensor = -1. / keras.ops.sqrt(GREEK_PI)
 
         crps_tensor_1d = predicted_stdev_tensor * (
             first_term_tensor + second_term_tensor + third_term_tensor
