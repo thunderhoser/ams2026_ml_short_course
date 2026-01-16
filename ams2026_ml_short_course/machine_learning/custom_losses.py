@@ -7,14 +7,19 @@ GREEK_PI = numpy.pi
 
 
 class CRPS(keras.losses.Loss):
-    def __init__(self, function_name, **kwargs):
+    def __init__(self, function_name, diversity_weight, **kwargs):
         """Turns CRPS into loss function.
 
         :param function_name: Name of function (string).
+        :param diversity_weight: Weight for diversity term, which encourages
+            each ensemble member to differ among data samples.
         """
 
         assert isinstance(function_name, str)
         super().__init__(name=function_name, **kwargs)
+
+        assert diversity_weight >= 0.
+        self.diversity_weight = diversity_weight
 
     def call(self, target_tensor, prediction_tensor):
         """Computes CRPS for a single batch.
@@ -44,7 +49,12 @@ class CRPS(keras.losses.Loss):
         )
 
         crps_tensor_1d = mae_tensor_1d - 0.5 * mapd_tensor_1d
-        return keras.ops.mean(crps_tensor_1d)
+        crps_itself = keras.ops.mean(crps_tensor_1d)
+        diversity_term = keras.ops.mean(
+            keras.ops.std(prediction_tensor, axis=0)
+        )
+
+        return crps_itself - self.diversity_weight * diversity_term
 
 
 class MeanSquaredError(keras.losses.Loss):
