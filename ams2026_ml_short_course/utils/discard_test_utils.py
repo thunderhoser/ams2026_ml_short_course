@@ -261,7 +261,7 @@ def plot_discard_test(
     #     'Discard fraction',
     #     fontsize=INSET_FONT_SIZE
     # )
-    unit_string = r's$^{-1}$'
+    unit_string = r'ks$^{-1}$'
     inset_axes_object.set_ylabel(
         'Avg target or pred ({0:s})'.format(unit_string),
         fontsize=INSET_FONT_SIZE

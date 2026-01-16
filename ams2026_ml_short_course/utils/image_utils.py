@@ -9,6 +9,8 @@ import xarray
 import netCDF4
 from ams2026_ml_short_course.utils import utils
 
+KILOSECONDS_TO_SECONDS = 1000
+
 DATE_FORMAT = '%Y%m%d'
 DATE_FORMAT_REGEX = '[0-9][0-9][0-9][0-9][0-1][0-9][0-3][0-9]'
 
@@ -211,7 +213,7 @@ def read_file(netcdf_file_name):
         PREDICTOR_NAMES_KEY: PREDICTOR_NAMES,
         PREDICTOR_MATRIX_KEY: predictor_matrix,
         TARGET_NAME_KEY: TARGET_NAME,
-        TARGET_MATRIX_KEY: 1000 * target_matrix
+        TARGET_MATRIX_KEY: KILOSECONDS_TO_SECONDS * target_matrix
     }
 
 

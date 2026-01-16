@@ -25,7 +25,7 @@ def data_generator(image_file_names, num_examples_per_batch,
         predictors.  See doc for `image_normalization.normalize_data`.
     :return: predictor_matrix: E-by-M-by-N-by-C numpy array of predictor values.
     :return: target_values: length-E numpy array of target values (max future
-        vorticity in s^-1).
+        vorticity in ks^-1).
     :raises: TypeError: if `normalization_dict is None`.
     """
 
@@ -98,7 +98,7 @@ def data_generator(image_file_names, num_examples_per_batch,
         )
 
         print((
-            'Mean target value (max future vorticity in s^-1): {0:.4f}\n'
+            'Mean target value (max future vorticity in ks^-1): {0:.4f}\n'
         ).format(
             numpy.mean(target_values)
         ))
@@ -140,7 +140,7 @@ def create_data(image_file_names, normalization_dict):
     )
 
     print((
-        'Mean target value (max future vorticity in s^-1): {0:.4f}\n'
+        'Mean target value (max future vorticity in ks^-1): {0:.4f}\n'
     ).format(
         numpy.mean(target_values)
     ))
@@ -312,15 +312,10 @@ def train_model_sans_generator(
         image_file_names=training_file_names,
         normalization_dict=normalization_dict
     )
-    training_max_refls = numpy.max(training_predictor_matrix[..., 0], axis=(1, 2))
-    print(numpy.corrcoef(training_max_refls, training_target_values))
-
     validation_predictor_matrix, validation_target_values = create_data(
         image_file_names=validation_file_names,
         normalization_dict=normalization_dict
     )
-    validation_max_refls = numpy.max(validation_predictor_matrix[..., 0], axis=(1, 2))
-    print(numpy.corrcoef(validation_max_refls, validation_target_values))
 
     model_object.fit(
         x=training_predictor_matrix,

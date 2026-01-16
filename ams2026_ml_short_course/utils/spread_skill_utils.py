@@ -333,7 +333,7 @@ def plot_spread_vs_skill(
         markerfacecolor=line_colour, markeredgecolor=line_colour
     )
 
-    unit_string = r's$^{-1}$'
+    unit_string = r'ks$^{-1}$'
     axes_object.set_xlabel(
         'Spread (stdev of predictive distribution; {0:s})'.format(unit_string)
     )
