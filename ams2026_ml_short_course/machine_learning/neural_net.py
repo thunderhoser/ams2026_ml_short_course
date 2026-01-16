@@ -312,10 +312,15 @@ def train_model_sans_generator(
         image_file_names=training_file_names,
         normalization_dict=normalization_dict
     )
+    training_max_refls = numpy.max(training_predictor_matrix[..., 0], axis=(1, 2))
+    print(numpy.corrcoef(training_max_refls, training_target_values))
+
     validation_predictor_matrix, validation_target_values = create_data(
         image_file_names=validation_file_names,
         normalization_dict=normalization_dict
     )
+    validation_max_refls = numpy.max(validation_predictor_matrix[..., 0], axis=(1, 2))
+    print(numpy.corrcoef(validation_max_refls, validation_target_values))
 
     model_object.fit(
         x=training_predictor_matrix,
@@ -323,7 +328,7 @@ def train_model_sans_generator(
         batch_size=num_examples_per_batch,
         steps_per_epoch=None,
         epochs=num_epochs,
-        shuffle=False,
+        shuffle=True,
         initial_epoch=initial_epoch,
         verbose=1,
         callbacks=list_of_callback_objects,

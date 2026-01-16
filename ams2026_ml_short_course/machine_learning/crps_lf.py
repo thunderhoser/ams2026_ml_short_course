@@ -239,7 +239,7 @@ def setup_cnn(
 
     model_object.compile(
         loss=loss_function,
-        optimizer=keras.optimizers.AdamW(),
+        optimizer=keras.optimizers.Adam(),
         metrics=metric_functions
     )
 

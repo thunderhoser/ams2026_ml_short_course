@@ -211,7 +211,7 @@ def read_file(netcdf_file_name):
         PREDICTOR_NAMES_KEY: PREDICTOR_NAMES,
         PREDICTOR_MATRIX_KEY: predictor_matrix,
         TARGET_NAME_KEY: TARGET_NAME,
-        TARGET_MATRIX_KEY: target_matrix
+        TARGET_MATRIX_KEY: 1e6 * target_matrix
     }
 
 
