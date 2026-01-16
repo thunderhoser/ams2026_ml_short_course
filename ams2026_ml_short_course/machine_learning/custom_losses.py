@@ -292,13 +292,13 @@ class QuantileLoss(keras.losses.Loss):
             self.quantile_levels, dtype=prediction_tensor.dtype
         )
         quantile_level_tensor_2d = keras.ops.reshape(
-            quantile_level_tensor, (1, self.num_quantiles)
+            quantile_level_tensor, (1, len(self.quantile_levels))
         )
 
         target_tensor = keras.ops.cast(target_tensor, prediction_tensor.dtype)
         target_tensor_2d = keras.ops.expand_dims(target_tensor, axis=-1)
         target_tensor_2d = keras.ops.repeat(
-            target_tensor_2d, self.num_quantiles, axis=-1
+            target_tensor_2d, len(self.quantile_levels), axis=-1
         )
 
         error_tensor_2d = target_tensor_2d - prediction_tensor
