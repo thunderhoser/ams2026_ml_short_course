@@ -390,3 +390,34 @@ def read_model_weights(model_object, hdf5_file_name):
 
     model_object.load_weights(hdf5_file_name)
     return model_object
+
+
+def convert_pdp_to_ensemble(prediction_matrix, ensemble_size):
+    """Converts parametric distributional prediction (PDP) to ensemble.
+
+    E = number of examples (storm objects)
+    S = ensemble size
+
+    :param prediction_matrix: E-by-2 numpy array of predictions, where
+        prediction_matrix[:, 0] contains means and prediction_matrix[:, 1]
+        contains standard deviations.
+    :param ensemble_size: Number of ensemble members.
+    :return: prediction_matrix: E-by-S numpy array of predictions.
+    """
+
+    assert len(prediction_matrix.shape) == 2
+    assert prediction_matrix.shape[1] == 2
+    assert numpy.all(prediction_matrix >= 0.)
+
+    num_examples = prediction_matrix.shape[0]
+    predicted_means = prediction_matrix[:, 0]
+    predicted_stdevs = prediction_matrix[:, 1]
+
+    prediction_matrix = numpy.random.normal(
+        loc=predicted_means[:, numpy.newaxis],
+        scale=predicted_stdevs[:, numpy.newaxis],
+        size=(num_examples, ensemble_size)
+    )
+    prediction_matrix = numpy.maximum(prediction_matrix, 0.)
+
+    return prediction_matrix

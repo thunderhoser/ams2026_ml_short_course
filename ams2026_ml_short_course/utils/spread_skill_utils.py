@@ -64,14 +64,16 @@ def _plot_means_as_inset(
         `matplotlib.axes._subplots.AxesSubplot`).
     """
 
-    if plotting_corner_string == 'top_right':
-        inset_axes_object = figure_object.add_axes([0.625, 0.55, 0.25, 0.25])
-    elif plotting_corner_string == 'bottom_right':
-        inset_axes_object = figure_object.add_axes([0.625, 0.3, 0.25, 0.25])
-    elif plotting_corner_string == 'bottom_left':
-        inset_axes_object = figure_object.add_axes([0.2, 0.3, 0.25, 0.25])
-    elif plotting_corner_string == 'top_left':
-        inset_axes_object = figure_object.add_axes([0.2, 0.55, 0.25, 0.25])
+    # if plotting_corner_string == 'top_right':
+    #     inset_axes_object = figure_object.add_axes([0.625, 0.55, 0.25, 0.25])
+    # elif plotting_corner_string == 'bottom_right':
+    #     inset_axes_object = figure_object.add_axes([0.625, 0.3, 0.25, 0.25])
+    # elif plotting_corner_string == 'bottom_left':
+    #     inset_axes_object = figure_object.add_axes([0.2, 0.3, 0.25, 0.25])
+    # elif plotting_corner_string == 'top_left':
+    #     inset_axes_object = figure_object.add_axes([0.2, 0.55, 0.25, 0.25])
+
+    inset_axes_object = figure_object.add_axes([1.05, 0.55, 0.25, 0.25])
 
     nan_flags = numpy.logical_or(
         numpy.isnan(bin_mean_target_values),

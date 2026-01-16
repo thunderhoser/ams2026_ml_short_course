@@ -76,7 +76,7 @@ def get_rmse_error_function():
             numpy.mean(prediction_matrix[use_example_flags, :], axis=-1)
         ) ** 2
 
-        numpy.sqrt(numpy.mean(squared_errors))
+        return numpy.sqrt(numpy.mean(squared_errors))
 
     return error_function
 
