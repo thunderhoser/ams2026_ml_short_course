@@ -35,6 +35,9 @@ HISTOGRAM_EDGE_COLOUR = numpy.full(3, 0.)
 HISTOGRAM_EDGE_WIDTH = 2.
 HISTOGRAM_FONT_SIZE = 16
 
+FIGURE_WIDTH_INCHES = 15
+FIGURE_HEIGHT_INCHES = 15
+
 FONT_SIZE = 20
 pyplot.rc('font', size=FONT_SIZE)
 pyplot.rc('axes', titlesize=FONT_SIZE)
@@ -745,3 +748,89 @@ def plot_performance_diagram(
     axes_object.set_ylim(0., 1.)
 
     return line_handle
+
+
+def plot_targets_and_predictions(
+        target_values, prediction_matrix, confidence_levels, dataset_name):
+    """Plots raw targets and predictions.
+
+    E = number of data examples
+    S = ensemble size
+    C = number of confidence levels
+
+    :param target_values: length-E numpy array of truth values.
+    :param prediction_matrix: E-by-S numpy array of predictions.
+    :param confidence_levels: length-C numpy array of confidence levels
+        (ranging from 0...1) to plot for every data example.
+    :param dataset_name: Name of dataset, to display at beginning of title.
+    """
+
+    assert len(target_values.shape) == 1
+    assert numpy.all(target_values >= 0.)
+
+    assert len(prediction_matrix.shape) == 2
+    assert prediction_matrix.shape[0] == len(target_values)
+    assert numpy.all(prediction_matrix >= 0.)
+
+    assert numpy.all(confidence_levels >= 0.5)
+    assert numpy.all(confidence_levels < 1.)
+
+    these_sort_indices = numpy.argsort(confidence_levels)
+    confidence_levels = confidence_levels[these_sort_indices]
+
+    colour_map_object = pyplot.get_cmap('YlGnBu')
+    num_levels = len(confidence_levels)
+    confidence_level_colours = [
+        colour_map_object(0.3 + 0.6 * i / (num_levels - 1))
+        for i in range(num_levels)
+    ]
+
+    figure_object, axes_object = pyplot.subplots(
+        1, 1, figsize=(FIGURE_WIDTH_INCHES, FIGURE_HEIGHT_INCHES)
+    )
+
+    sort_indices = numpy.argsort(target_values)
+    sorted_target_values = target_values[sort_indices]
+    sorted_prediction_matrix = prediction_matrix[sort_indices, :]
+
+    x_coords = numpy.arange(len(target_values))
+    unit_string = r'ks$^{-1}$'
+
+    ci_sort_indices = numpy.argsort(-confidence_levels)
+
+    for i in ci_sort_indices:
+        this_confidence_level = confidence_levels[i]
+        this_colour = confidence_level_colours[i]
+
+        min_percentile = 50 * (1. - this_confidence_level)
+        max_percentile = 50 * (1. + this_confidence_level)
+        min_predictions = numpy.percentile(
+            sorted_prediction_matrix, min_percentile, axis=1
+        )
+        max_predictions = numpy.percentile(
+            sorted_prediction_matrix, max_percentile, axis=1
+        )
+
+        axes_object.fill_between(
+            x_coords, min_predictions, max_predictions,
+            color=this_colour,
+            alpha=2. / 3,
+            label='{0:.1f}% CI for predictions ({1:s})'.format(
+                100 * this_confidence_level, unit_string
+            )
+        )
+
+    axes_object.plot(
+        x_coords,
+        sorted_target_values,
+        color=numpy.full(3, 0.),
+        linewidth=3,
+        label='Targets ({0:s})'.format(unit_string)
+    )
+
+    axes_object.set_xlabel('Data sample (sorted by target value)')
+    axes_object.set_xticks([], [])
+    axes_object.legend(loc='best', fontsize=12)
+    axes_object.grid(True, alpha=0.3)
+
+    axes_object.set_title('{0:s} targets vs. predictions'.format(dataset_name))

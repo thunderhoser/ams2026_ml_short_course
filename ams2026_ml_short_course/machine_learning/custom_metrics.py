@@ -301,7 +301,7 @@ class MeanAbsPairwiseDiff(keras.metrics.Metric):
 
 
 class CRPS(keras.metrics.Metric):
-    def __init__(self, function_name, diversity_weight, **kwargs):
+    def __init__(self, function_name, diversity_weight=0., **kwargs):
         """Turns CRPS into metric.
 
         :param function_name: Name of function (string).
@@ -456,4 +456,84 @@ class CRPSGaussian(keras.metrics.Metric):
         """Resets values between epochs."""
 
         self.total_weighted_crps.assign(0.)
+        self.total_weight.assign(0.)
+
+
+class QuantileLoss(keras.metrics.Metric):
+    def __init__(self, function_name, quantile_levels, **kwargs):
+        """Turns quantile loss into metric.
+
+        :param function_name: Name of function (string).
+        :param quantile_levels: 1-D numpy array of quantile levels, all ranging
+            from (0, 1).
+        """
+
+        assert isinstance(function_name, str)
+        super().__init__(name=function_name, **kwargs)
+
+        assert len(quantile_levels.shape) == 1
+        assert numpy.all(quantile_levels > 0.)
+        assert numpy.all(quantile_levels < 1.)
+
+        self.quantile_levels = quantile_levels
+
+        self.total_weighted_quantile_loss = self.add_weight(
+            name='total_weighted_quantile_loss', initializer='zeros'
+        )
+        self.total_weight = self.add_weight(
+            name='total_weight', initializer='zeros'
+        )
+
+    def update_state(self, target_tensor, prediction_tensor,
+                     sample_weight=None):
+        """Updates quantile loss.
+
+        B = batch size (number of data samples)
+        Q = number of quantiles
+
+        :param target_tensor: length-B tensor of actual values.
+        :param prediction_tensor: B-by-Q tensor of predicted quantiles.
+        :param sample_weight: Leave this alone.
+        """
+
+        quantile_level_tensor = keras.ops.convert_to_tensor(
+            self.quantile_levels, dtype=prediction_tensor.dtype
+        )
+        quantile_level_tensor_2d = keras.ops.reshape(
+            quantile_level_tensor, (1, self.num_quantiles)
+        )
+
+        target_tensor = keras.ops.cast(target_tensor, prediction_tensor.dtype)
+        target_tensor_2d = keras.ops.expand_dims(target_tensor, axis=-1)
+        target_tensor_2d = keras.ops.repeat(
+            target_tensor_2d, self.num_quantiles, axis=-1
+        )
+
+        error_tensor_2d = target_tensor_2d - prediction_tensor
+
+        quantile_loss_tensor_2d = keras.ops.maximum(
+            quantile_level_tensor_2d * error_tensor_2d,
+            (quantile_level_tensor_2d - 1.) * error_tensor_2d
+        )
+
+        self.total_weighted_quantile_loss.assign_add(
+            keras.ops.mean(quantile_loss_tensor_2d)
+        )
+        self.total_weight.assign_add(1.)
+
+    def result(self):
+        """Computes final quantile loss.
+
+        :return: quantile_loss: Quantile loss (a scalar value).
+        """
+
+        return (
+            self.total_weighted_quantile_loss /
+            keras.ops.maximum(self.total_weight, 1e-7)
+        )
+
+    def reset_state(self):
+        """Resets values between epochs."""
+
+        self.total_weighted_quantile_loss.assign(0.)
         self.total_weight.assign(0.)

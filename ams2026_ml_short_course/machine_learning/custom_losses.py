@@ -7,7 +7,7 @@ GREEK_PI = numpy.pi
 
 
 class CRPS(keras.losses.Loss):
-    def __init__(self, function_name, diversity_weight, **kwargs):
+    def __init__(self, function_name, diversity_weight=0., **kwargs):
         """Turns CRPS into loss function.
 
         :param function_name: Name of function (string).
@@ -257,3 +257,55 @@ class MSEGaussian(keras.losses.Loss):
         target_tensor = keras.ops.cast(target_tensor, prediction_tensor.dtype)
         squared_error_tensor = (prediction_tensor[:, 0] - target_tensor) ** 2
         return keras.ops.mean(squared_error_tensor)
+
+
+class QuantileLoss(keras.losses.Loss):
+    def __init__(self, quantile_levels, function_name, **kwargs):
+        """Turns quantile loss into loss function.
+
+        :param quantile_levels: 1-D numpy array of quantile levels, all ranging
+            from (0, 1).
+        :param function_name: Name of function (string).
+        """
+
+        assert isinstance(function_name, str)
+        super().__init__(name=function_name, **kwargs)
+        
+        assert len(quantile_levels.shape) == 1
+        assert numpy.all(quantile_levels > 0.)
+        assert numpy.all(quantile_levels < 1.)
+
+        self.quantile_levels = quantile_levels
+
+    def call(self, target_tensor, prediction_tensor):
+        """Computes quantile loss for a single batch.
+
+        B = batch size (number of data samples)
+        Q = number of quantiles
+
+        :param target_tensor: length-B tensor of actual values.
+        :param prediction_tensor: B-by-Q tensor of predicted quantiles.
+        :return: loss_value: Quantile loss (scalar).
+        """
+
+        quantile_level_tensor = keras.ops.convert_to_tensor(
+            self.quantile_levels, dtype=prediction_tensor.dtype
+        )
+        quantile_level_tensor_2d = keras.ops.reshape(
+            quantile_level_tensor, (1, self.num_quantiles)
+        )
+
+        target_tensor = keras.ops.cast(target_tensor, prediction_tensor.dtype)
+        target_tensor_2d = keras.ops.expand_dims(target_tensor, axis=-1)
+        target_tensor_2d = keras.ops.repeat(
+            target_tensor_2d, self.num_quantiles, axis=-1
+        )
+
+        error_tensor_2d = target_tensor_2d - prediction_tensor
+
+        quantile_loss_tensor_2d = keras.ops.maximum(
+            quantile_level_tensor_2d * error_tensor_2d,
+            (quantile_level_tensor_2d - 1.) * error_tensor_2d
+        )
+
+        return keras.ops.mean(quantile_loss_tensor_2d)
