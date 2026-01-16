@@ -163,3 +163,34 @@ class CRPSGaussian(keras.losses.Loss):
             first_term_tensor + second_term_tensor + third_term_tensor
         )
         return keras.ops.mean(crps_tensor_1d)
+
+
+class MSEGaussian(keras.losses.Loss):
+    def __init__(self, function_name, **kwargs):
+        """Turns parametric MSE into loss function.
+
+        This parametric MSE assumes that the target variable follows a Gaussian
+        distribution, so the neural net needs to predict only the mean and
+        standard deviation of said Gaussian.
+
+        :param function_name: Name of function (string).
+        """
+
+        assert isinstance(function_name, str)
+        super().__init__(name=function_name, **kwargs)
+
+    def call(self, target_tensor, prediction_tensor):
+        """Computes MSE for a single batch.
+
+        B = batch size (number of data samples)
+
+        :param prediction_tensor: B-by-2 tensor of predicted values, where
+            prediction_tensor[:, 0] contains means and prediction_tensor[:, 1]
+            contains standard deviations.
+        :param target_tensor: length-B tensor of actual values.
+        :return: loss_value: MSE (scalar).
+        """
+
+        target_tensor = keras.ops.cast(target_tensor, prediction_tensor.dtype)
+        squared_error_tensor = (prediction_tensor[:, 0] - target_tensor) ** 2
+        return keras.ops.mean(squared_error_tensor)
