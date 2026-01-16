@@ -323,7 +323,7 @@ def train_model_sans_generator(
         batch_size=num_examples_per_batch,
         steps_per_epoch=None,
         epochs=num_epochs,
-        shuffle=True,
+        shuffle=False,
         initial_epoch=initial_epoch,
         verbose=1,
         callbacks=list_of_callback_objects,
