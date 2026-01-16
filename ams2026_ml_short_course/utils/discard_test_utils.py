@@ -15,8 +15,8 @@ DISCARD_IMPROVEMENT_KEY = 'discard_improvement'
 DEFAULT_LINE_COLOUR = numpy.array([217, 95, 2], dtype=float) / 255
 DEFAULT_LINE_WIDTH = 3.
 
-FIGURE_WIDTH_INCHES = 15
-FIGURE_HEIGHT_INCHES = 15
+FIGURE_WIDTH_INCHES = 10
+FIGURE_HEIGHT_INCHES = 10
 
 INSET_FONT_SIZE = 14
 DEFAULT_FONT_SIZE = 24
@@ -47,7 +47,7 @@ def get_stdev_uncertainty_function():
             deviations.
         """
 
-        return numpy.mean(prediction_matrix, ddof=1, axis=-1)
+        return numpy.std(prediction_matrix, ddof=1, axis=-1)
 
     return uncertainty_function
 
